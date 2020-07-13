@@ -1,0 +1,22 @@
+int sensor = 0;
+
+void setup()
+{
+  pinMode(13, OUTPUT);
+}
+
+void loop()
+{
+  sensor = analogRead(A1);
+  Serial.println(sensor, DEC);
+  if (sensor > 50)
+  {
+    digitalWrite(13, HIGH);
+    Serial.println("Light");
+  }
+  else
+  {
+    digitalWrite(13, LOW);
+    Serial.println("Dark");
+  }
+}
