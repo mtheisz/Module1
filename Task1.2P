@@ -1,0 +1,31 @@
+const byte ledPin = 13;
+const byte sensorPin = 2;
+volatile byte sensorState = LOW;
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(ledPin, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(sensorPin),interrupt_routine,RISING);
+}
+
+void loop()
+{
+  if (sensorState == HIGH)
+  {
+    digitalWrite(ledPin, HIGH);
+    delay(1000);
+  }
+  
+  if (sensorState == HIGH)
+  {
+    sensorState = LOW;
+    digitalWrite(ledPin, LOW);
+  }
+}
+
+void interrupt_routine()
+{
+  sensorState = HIGH;
+  Serial.println("interrupt");
+}
