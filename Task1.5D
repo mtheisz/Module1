@@ -1,0 +1,71 @@
+const byte ledPin = PB5;
+const uint16_t t1_load = 0;
+const uint16_t t1_comp = 31250;
+
+const byte signalPin = 2;
+
+const byte tiltPin = 3;
+volatile byte tiltState = LOW;
+
+void pciSetup(byte pin)
+{
+    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
+    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
+}
+
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  pinMode(signalPin, INPUT);
+  pciSetup(signalPin);
+  
+  pinMode(tiltPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(tiltPin),interrupt_routine2,CHANGE);
+  
+  DDRB |= (1 << ledPin);
+  
+  TCCR1A = 0;
+  
+  TCCR1B &= ~ (1 << WGM13);
+  TCCR1B |= (1 << WGM12);
+  
+  TCCR1B |= (1 << CS12);
+  TCCR1B &= ~ (1 << CS11);
+  TCCR1B &= ~ (1 << CS10);
+  
+  TCNT1 = t1_load;
+  OCR1A = t1_comp;
+  
+  TIMSK1 = (1 << OCIE1A);
+  
+  sei();
+}
+
+void loop()
+{
+  delay(500);
+  
+  digitalWrite(ledPin, tiltState);
+  delay(500);
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+  PORTB ^= (1 << ledPin);
+}
+
+ISR(PCINT2_vect)
+{
+  digitalWrite(ledPin,digitalRead(signalPin));
+  Serial.println("PCINT");
+}
+
+void interrupt_routine2()
+{
+  tiltState = !tiltState;
+  Serial.println("interrupt: tilt sensor");
+  delay(500);
+}
