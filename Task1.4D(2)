@@ -1,0 +1,73 @@
+const byte ledPin = PB5;
+const byte ledPin2 = PB4;
+const byte ledPin3 = PB0;
+const uint16_t t1_load = 0;
+const uint16_t t1_comp = 31250;
+
+const byte signalPin = 2;
+
+const byte signalPin2 = 4;
+
+const byte tiltPin = 3;
+
+void pciSetup(byte pin)
+{
+    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));
+    PCIFR  |= bit (digitalPinToPCICRbit(pin));
+    PCICR  |= bit (digitalPinToPCICRbit(pin));
+}
+
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  pinMode(signalPin, INPUT);
+  pciSetup(signalPin);
+  
+  pinMode(signalPin2, INPUT);
+  pciSetup(signalPin2);
+  
+  pinMode(tiltPin, INPUT);
+  pciSetup(tiltPin);
+  
+  DDRB |= (1 << ledPin);
+  DDRB |= (1 << ledPin2);
+  DDRB |= (1 << ledPin3);
+  
+  TCCR1A = 0;
+  
+  TCCR1B &= ~ (1 << WGM13);
+  TCCR1B |= (1 << WGM12);
+  
+  TCCR1B |= (1 << CS12);
+  TCCR1B &= ~ (1 << CS11);
+  TCCR1B &= ~ (1 << CS10);
+  
+  TCNT1 = t1_load;
+  OCR1A = t1_comp;
+  
+  TIMSK1 = (1 << OCIE1A);
+  
+  sei();
+}
+
+void loop()
+{
+  delay(500);
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+  PORTB ^= (1 << ledPin);
+  PORTB ^= (1 << ledPin2);
+  PORTB ^= (1 << ledPin3);
+}
+
+ISR(PCINT2_vect)
+{
+  digitalWrite(ledPin,digitalRead(signalPin));
+  digitalWrite(ledPin2,digitalRead(signalPin2));
+  digitalWrite(ledPin3,digitalRead(tiltPin));
+  Serial.println("PCINT");
+}
