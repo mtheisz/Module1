@@ -1,0 +1,40 @@
+const byte ledPin = 13;
+const byte ledPin2 = 12;
+
+const byte signalPin = 2;
+volatile byte sensorState = LOW;
+
+const byte tiltPin = 3;
+volatile byte tiltState = LOW;
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(ledPin, OUTPUT);
+  pinMode(ledPin2, OUTPUT);
+  pinMode(signalPin, INPUT);
+  pinMode(tiltPin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(signalPin),interrupt_routine,CHANGE);
+  attachInterrupt(digitalPinToInterrupt(tiltPin),interrupt_routine2,CHANGE);
+}
+
+void loop()
+{
+  digitalWrite(ledPin, sensorState);
+  digitalWrite(ledPin2, tiltState);
+  delay(500);
+}
+
+void interrupt_routine()
+{
+  sensorState = !sensorState;
+  Serial.println("interrupt: PIR sensor");
+  delay(500);
+}
+
+void interrupt_routine2()
+{
+  tiltState = !tiltState;
+  Serial.println("interrupt: tilt sensor");
+  delay(500);
+}
